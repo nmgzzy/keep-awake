@@ -87,6 +87,13 @@ void notifyError(const std::string& msg) {
 #endif
 }
 
+// 主动归还暂时用不到的物理页，降低工作集占用（需要时系统会再换回）。
+void trimWorkingSet() {
+#ifdef _WIN32
+    SetProcessWorkingSetSizeEx(GetCurrentProcess(), (SIZE_T)-1, (SIZE_T)-1, 0);
+#endif
+}
+
 int remainingSeconds() {
     auto d = std::chrono::duration_cast<std::chrono::seconds>(g.endTime - clock_t_::now());
     return (int)d.count();
@@ -172,6 +179,7 @@ void stopAll() {
     g.infinite = false;
     g.chosenSeconds = 0;
     refresh();
+    trimWorkingSet();  // 计时期间换回的页，回到空闲后再归还
 }
 
 void cbPreset(struct tray_menu* m) { startTimed((long)(intptr_t)m->context); }
@@ -183,6 +191,7 @@ void cbCustom(struct tray_menu*) {
     int sec = 0;
     if (parseDuration(in, sec)) startTimed(sec);
     else notifyError("无法识别的时长：" + in + "\n请输入如 90m、1h30m、45（分钟）。");
+    trimWorkingSet();  // 输入框/消息框会拉起额外的 UI 页，用完归还
 }
 
 void cbStop(struct tray_menu*) { stopAll(); }
@@ -226,6 +235,7 @@ int main() {
     buildMenu();
     if (tray_init(&g_tray) != 0) return 1;
     g_inited = true;
+    trimWorkingSet();  // 初始化加载了一堆 shell/COM 页，启动后归还一次
 
     while (g_running) {
         if (tray_loop(0) < 0) break;  // 收到 WM_QUIT
