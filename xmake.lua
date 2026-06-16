@@ -17,6 +17,7 @@ target("keep-awake")
 
     if is_plat("windows") then
         add_files("src/inhibitor_win.cpp", "src/input_dialog_win.cpp", "src/autostart_win.cpp")
+        add_files("src/single_instance_win.cpp")
         add_files("src/app.rc")                       -- 内嵌图标
         add_cxflags("/utf-8")                         -- 源码与执行字符集均按 UTF-8
         add_syslinks("user32", "shell32", "kernel32", "gdi32", "advapi32")
@@ -24,9 +25,11 @@ target("keep-awake")
         add_ldflags("/subsystem:windows", "/entry:mainCRTStartup", {force = true})
     elseif is_plat("macosx") then
         add_files("src/inhibitor_mac.mm", "src/input_dialog_mac.mm", "src/autostart_other.cpp")
+        add_files("src/single_instance_posix.cpp")
         add_frameworks("Cocoa", "IOKit", "CoreFoundation")
     else
         add_files("src/inhibitor_linux.cpp", "src/input_dialog_linux.cpp", "src/autostart_other.cpp")
+        add_files("src/single_instance_posix.cpp")
         -- Linux 托盘依赖 GTK3 + appindicator（需系统已安装）
         add_cxflags("$(shell pkg-config --cflags gtk+-3.0 appindicator3-0.1)", {force = true})
         add_ldflags("$(shell pkg-config --libs gtk+-3.0 appindicator3-0.1)", {force = true})

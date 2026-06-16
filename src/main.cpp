@@ -11,6 +11,7 @@
 #include "inhibitor.h"
 #include "input_dialog.h"
 #include "autostart.h"
+#include "single_instance.h"
 
 // 选择 tray.h 的平台实现（须在 include 之前定义）
 #ifdef _WIN32
@@ -220,6 +221,9 @@ void tick() {
 }  // namespace
 
 int main() {
+    // 单实例：已有实例在运行则静默退出，避免重复启动多个托盘图标。
+    if (!acquireSingleInstance()) return 0;
+
 #ifdef _WIN32
     {
         char exe[512] = {0};
