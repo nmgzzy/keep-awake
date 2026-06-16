@@ -240,7 +240,7 @@ int main() {
     while (g_running) {
         if (tray_loop(0) < 0) break;  // 收到 WM_QUIT
         tick();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     g.inhibitor.stop();
