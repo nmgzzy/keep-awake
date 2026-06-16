@@ -10,6 +10,7 @@
 #include "duration.h"
 #include "inhibitor.h"
 #include "input_dialog.h"
+#include "autostart.h"
 
 // 选择 tray.h 的平台实现（须在 include 之前定义）
 #ifdef _WIN32
@@ -100,6 +101,7 @@ void cbPreset(struct tray_menu* m);
 void cbForever(struct tray_menu* m);
 void cbCustom(struct tray_menu* m);
 void cbStop(struct tray_menu* m);
+void cbAutostart(struct tray_menu* m);
 void cbQuit(struct tray_menu* m);
 
 void buildMenu() {
@@ -126,6 +128,8 @@ void buildMenu() {
     put("自定义时长…", 0, 0, cbCustom, nullptr);
     sep();
     put("停止", g.active ? 0 : 1, 0, cbStop, nullptr);  // 仅激活时可用
+    put("开机自启", autostartSupported() ? 0 : 1,
+        autostartEnabled() ? 1 : 0, cbAutostart, nullptr);
     put("退出", 0, 0, cbQuit, nullptr);
     g_menu[i] = {nullptr, 0, 0, nullptr, nullptr, nullptr};  // 终止项
 
@@ -174,6 +178,12 @@ void cbCustom(struct tray_menu*) {
 }
 
 void cbStop(struct tray_menu*) { stopAll(); }
+
+void cbAutostart(struct tray_menu*) {
+    bool now = autostartEnabled();
+    if (!autostartSet(!now)) notifyError("设置开机自启失败。");
+    refresh();
+}
 
 void cbQuit(struct tray_menu*) {
     stopAll();
