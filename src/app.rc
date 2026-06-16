@@ -1,0 +1,2 @@
+// 资源 id 取 1，使其成为 exe 的默认图标，同时供 ExtractIconEx(index 0) 提取。
+1 ICON "app.ico"
