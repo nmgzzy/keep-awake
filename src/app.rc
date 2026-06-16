@@ -1,2 +1,5 @@
-// 资源 id 取 1，使其成为 exe 的默认图标，同时供 ExtractIconEx(index 0) 提取。
-1 ICON "app.ico"
+// 两态托盘图标。资源 id 即提取顺序：
+//   1 -> ExtractIconEx 索引 0（空闲·蓝，同时作为 exe 的默认显示图标）
+//   2 -> ExtractIconEx 索引 1（防休眠·橙）
+1 ICON "icon_idle.ico"
+2 ICON "icon_awake.ico"

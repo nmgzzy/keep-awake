@@ -39,7 +39,11 @@ State g;
 struct tray g_tray;
 bool g_running = true;
 bool g_inited = false;
-char g_iconPath[512] = {0};
+#ifdef _WIN32
+// "exe路径,索引"：索引 0=空闲(蓝)，1=防休眠(橙)，与 app.rc 资源 id 对应。
+std::string g_iconIdle;
+std::string g_iconAwake;
+#endif
 
 // 菜单文本（已转成本地编码）的持久存储，菜单项的 text 指针指向这里。
 std::string g_lbl[16];
@@ -137,6 +141,10 @@ void buildMenu() {
 }
 
 void refresh() {
+#ifdef _WIN32
+    // 按状态切换图标：防休眠中=橙，空闲=蓝。
+    g_tray.icon = const_cast<char*>((g.active ? g_iconAwake : g_iconIdle).c_str());
+#endif
     buildMenu();
     if (g_inited) tray_update(&g_tray);
 }
@@ -204,8 +212,13 @@ void tick() {
 
 int main() {
 #ifdef _WIN32
-    GetModuleFileNameA(nullptr, g_iconPath, sizeof(g_iconPath));
-    g_tray.icon = g_iconPath;   // 图标内嵌在 exe 资源里，运行时从自身提取
+    {
+        char exe[512] = {0};
+        GetModuleFileNameA(nullptr, exe, sizeof(exe));   // 图标内嵌在 exe 资源里，运行时从自身提取
+        g_iconIdle  = std::string(exe) + ",0";           // 蓝
+        g_iconAwake = std::string(exe) + ",1";           // 橙
+        g_tray.icon = const_cast<char*>(g_iconIdle.c_str());
+    }
 #else
     g_tray.icon = (char*)"keep-awake";  // mac/linux：图标名（未实测）
 #endif

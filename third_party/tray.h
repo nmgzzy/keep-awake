@@ -341,8 +341,31 @@ static void tray_update(struct tray *tray) {
   UINT id = ID_TRAY_FIRST;
   hmenu = _tray_menu(tray->menu, &id);
   SendMessage(hwnd, WM_INITMENUPOPUP, (WPARAM)hmenu, 0);
-  HICON icon;
-  ExtractIconEx(tray->icon, 0, NULL, &icon, 1);
+  HICON icon = NULL;
+  // 本地修改：支持 "path,index" 形式按索引提取图标（用于按状态切换图标）。
+  {
+    const char *src = tray->icon ? tray->icon : "";
+    const char *comma = strrchr(src, ',');
+    int idx = 0, hasIndex = 0;
+    if (comma && comma[1]) {
+      int val = 0, ok = 1;
+      for (const char *p = comma + 1; *p; p++) {
+        if (*p < '0' || *p > '9') { ok = 0; break; }
+        val = val * 10 + (*p - '0');
+      }
+      if (ok) { hasIndex = 1; idx = val; }
+    }
+    if (hasIndex) {
+      char path[MAX_PATH];
+      size_t n = (size_t)(comma - src);
+      if (n >= MAX_PATH) n = MAX_PATH - 1;
+      memcpy(path, src, n);
+      path[n] = '\0';
+      ExtractIconEx(path, idx, NULL, &icon, 1);
+    } else {
+      ExtractIconEx(src, 0, NULL, &icon, 1);
+    }
+  }
   if (nid.hIcon) {
     DestroyIcon(nid.hIcon);
   }
